@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:redux/redux.dart';
 import 'package:flutter_redux/flutter_redux.dart';
@@ -6,7 +7,7 @@ import 'models/models.dart';
 import 'reducers/app_reducer.dart';
 import 'screens/teams/teams_controller.dart';
 
-void main() {
+Future<void> main() async {
   final initialState = AppState(
     selectedWidget: SelectedWidget(
       name: WidgetName.averageGoalsWidget,
@@ -16,7 +17,15 @@ void main() {
     appReducer,
     initialState: initialState,
   );
-  runApp(StoreProvider(store: store, child: SportRadar()));
+  runZonedGuarded<void>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      runApp(StoreProvider(store: store, child: SportRadar()));
+    },
+    (error, stackTrace) async {
+      print('\n${error.toString()}\n${stackTrace.toString()}');
+    },
+  );
 }
 
 class SportRadar extends StatelessWidget {
