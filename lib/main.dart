@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:redux/redux.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 
-import 'models/models.dart';
-import 'reducers/app_reducer.dart';
-import 'screens/teams/teams_controller.dart';
+import 'package:SportRadar/models/models.dart';
+import 'package:SportRadar/reducers/app_reducer.dart';
+import 'package:SportRadar/screens/teams/teams_controller.dart';
 
 Future<void> main() async {
-  final initialState = AppState(
+  const initialState = AppState(
     selectedWidget: SelectedWidget(
       name: WidgetName.averageGoalsWidget,
     ),
@@ -36,7 +36,7 @@ class SportRadar extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: Teams(title: 'Soccer teams'),
+      home: const Teams(title: 'Soccer teams'),
     );
   }
 }

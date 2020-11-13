@@ -11,13 +11,14 @@ import 'package:SportRadar/models/models.dart';
 import 'package:SportRadar/widgets/progress_loader.dart';
 
 class AverageGoalsChart extends StatefulWidget {
-  //
-  AverageGoalsChart({Key key, @required this.seasonId, this.teamOneId, this.teamTwoId}) : super(key: key);
+  AverageGoalsChart({
+    Key key, @required this.seasonId, this.teamOneId, this.teamTwoId
+  }) : super(key: key);
 
   final String seasonId;
   final String teamOneId;
   final String teamTwoId;
-  final String title = "Average goals";
+  String title = 'Average goals';
  
   @override
   AverageGoalsChartState createState() => AverageGoalsChartState();
@@ -36,11 +37,9 @@ class AverageGoalsChartState extends State<AverageGoalsChart> {
   @override
   void initState()  {
     _seasonGoalsRequest(widget.teamOneId)
-    .then((teamOneValue) {
+    .then((Data teamOneData) {
       _seasonGoalsRequest(widget.teamTwoId)
-      .then((teamTwoValue) {
-        Data teamOneData = Data.fromJson(teamOneValue);
-        Data teamTwoData = Data.fromJson(teamTwoValue);
+      .then((Data teamTwoData) {
         setState(() {
           _teamOne = teamOneData.team;
           _teamTwo = teamTwoData.team;
@@ -55,15 +54,16 @@ class AverageGoalsChartState extends State<AverageGoalsChart> {
     super.initState();
   }
 
-  Future _seasonGoalsRequest(String teamId) async {
-    var result = await Requests().getTeamStatistics(widget.seasonId, teamId);
-    var data = json.decode(result);
-    return data;   
+  Future <Data> _seasonGoalsRequest(String teamId) async {
+    final dynamic result = await Requests().getTeamStatistics(widget.seasonId, teamId);
+    final dynamic data = jsonDecode(result.toString());
+    final Data teamData = Data.fromJson(data as Map<String, dynamic>);
+    return teamData;   
   }
 
   List<GoalsByInterval> _goalsByIntervalList(Scored teamGoals, int teamTotal) {
     int index = 0;
-    var goalsByIntervalList = <GoalsByInterval>[];
+    final goalsByIntervalList = <GoalsByInterval>[];
     for(final String timeInterval in timeintervalsArray){
       goalsByIntervalList.add(GoalsByInterval(timeInterval, teamGoals.period[index].value / teamTotal));
       index++;
@@ -101,8 +101,8 @@ class AverageGoalsChartState extends State<AverageGoalsChart> {
         title: Text(widget.title.toUpperCase()),
       ),
       body: Container(
-        padding: EdgeInsets.all(20.0),
-        child: _seriesList != null ? _ordinalComboChart() : ProgressLoader(),
+        padding: const EdgeInsets.all(20.0),
+        child: _seriesList != null ? _ordinalComboChart() : const ProgressLoader(),
       ),
     );
   }
@@ -113,7 +113,7 @@ class AverageGoalsChartState extends State<AverageGoalsChart> {
       child: charts.OrdinalComboChart(
         _seriesList,
         animate: true,
-        primaryMeasureAxis: charts.NumericAxisSpec(
+        primaryMeasureAxis: const charts.NumericAxisSpec(
           showAxisLine: false,
           tickProviderSpec: charts.BasicNumericTickProviderSpec(
             desiredMinTickCount: 4,

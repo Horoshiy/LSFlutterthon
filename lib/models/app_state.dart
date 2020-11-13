@@ -1,15 +1,14 @@
 import 'package:meta/meta.dart';
 
-import 'models.dart';
+import 'package:SportRadar/models/models.dart';
 
 @immutable
 class AppState {
-
+  const AppState({
+    @required this.selectedWidget,
+  });
+  
   final SelectedWidget selectedWidget;
-
-    const AppState({
-      @required this.selectedWidget,
-    });
 
   @override
   String toString() {

@@ -3,15 +3,16 @@ import 'dart:io';
 import 'package:http/http.dart';
 
 class Network {
-  final String url;
-  
+
   Network(this.url);
 
+  final String url;
+  
   Future getData() async {
     // Add error handling
     try {
       print('Calling uri: $url');
-      Response response = await get(url);
+      final response = await get(url);
       if (response.statusCode == 200) {
         return response.body;
       } else {
@@ -22,7 +23,7 @@ class Network {
     } on HttpException {
       print("Couldn't find the post 😱");
     } on FormatException {
-      print("Bad response format 👎");
+      print('Bad response format 👎');
     }
   }
 }

@@ -7,7 +7,7 @@ class DateUtil {
 
   static DateTime yesterdayDate() {
     final today = DateUtil.todayDate();
-    DateTime yesterday = today.subtract(Duration(days: 1));
+    final yesterday = today.subtract(const Duration(days: 1));
     return yesterday;
   }
 
@@ -15,7 +15,7 @@ class DateUtil {
     return DateTime.parse(dateTime);
   }
 
-  static String dateTimeToStringFormatter(DateTime dateTime, {String formatMask: 'yyyy-MM-dd'}) {
+  static String dateTimeToStringFormatter(DateTime dateTime, {String formatMask = 'yyyy-MM-dd'}) {
     final formatter = DateFormat(formatMask);
     return formatter.format(dateTime);
   }

@@ -25,11 +25,11 @@ extension WidgetNameTitle on WidgetName {
 
 @immutable
 class SelectedWidget {
-  final WidgetName name;
-
   const SelectedWidget({
     @required this.name,
   });
+
+  final WidgetName name;
 
   dynamic toJson() => {
     'name': name,
