@@ -6,10 +6,10 @@ import 'package:SportRadar/models/models.dart';
 import 'package:SportRadar/selectors/selectors.dart';
 
 class TeamsViewModel {
+  TeamsViewModel({@required this.selectedWidget, @required this.onSetSelectedWidget});
+
   final SelectedWidget selectedWidget;
   final Function(WidgetName) onSetSelectedWidget;
-
-  TeamsViewModel({@required this.selectedWidget, @required this.onSetSelectedWidget});
 
   static TeamsViewModel fromStore(Store<AppState> store) {
     return TeamsViewModel(

@@ -8,11 +8,11 @@ import 'package:SportRadar/models/api/daily_results.dart';
 import 'package:SportRadar/models/models.dart';
 import 'package:SportRadar/screens/sport_widgets/average_goals.dart';
 import 'package:SportRadar/screens/teams/teams_view_model.dart';
-import 'package:SportRadar/utils/dateTime.dart';
+import 'package:SportRadar/utils/datetime.dart';
 import 'package:SportRadar/widgets/progress_loader.dart';
 
 class Teams extends StatefulWidget {
-  Teams({Key key, this.title}) : super(key: key);
+  const Teams({Key key, this.title}) : super(key: key);
   final String title;
 
   @override
@@ -27,10 +27,11 @@ class _TeamsState extends State<Teams> {
   bool _showSearchbar = false;
   DateTime _selectedDate = DateUtil.stringToDateFormatter('2020-11-02');
 
-  Future _sportMatchesRequest() async {
-    final result = await Requests().getDailyResults(_selectedDate);
-    final data = json.decode(result);
-    return data;
+  Future <Data> _sportMatchesRequest() async {
+    final dynamic result = await Requests().getDailyResults(_selectedDate);
+    final dynamic data = json.decode(result.toString());
+    final Data dailyResults = Data.fromJson(data as Map<String, dynamic>);
+    return dailyResults;
   }
 
   @override
@@ -40,9 +41,9 @@ class _TeamsState extends State<Teams> {
   }
 
   void _getSportMatchesData() {
-    _sportMatchesRequest().then((value) {
+    _sportMatchesRequest().then((Data dailyResults) {
       setState(() {
-        _dailyResults = Data.fromJson(value);
+        _dailyResults = dailyResults;
         _filteredDailyResults = _dailyResults.results;
       });
     });
@@ -66,30 +67,30 @@ class _TeamsState extends State<Teams> {
             title: Text(widget.title),
             actions: <Widget>[
               Padding(
-                padding: EdgeInsets.fromLTRB(8.0, 16.0, 10.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(8.0, 16.0, 10.0, 16.0),
                 child: GestureDetector(
                   onTap: () {
                     _onPressSearchIcon();
                   },
-                  child: Icon(
+                  child: const Icon(
                     Icons.search
                   ),
                 )
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(10.0, 16.0, 16.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(10.0, 16.0, 16.0, 16.0),
                 child: GestureDetector(
                   onTap: () {
                     _buildMaterialDatePicker(context);
                   },
-                  child: Icon(
+                  child: const Icon(
                     Icons.calendar_today
                   ),
                 )
               ),
             ],
           ),
-          body: _dailyResults == null ? ProgressLoader() : Column(
+          body: _dailyResults == null ? const ProgressLoader() : Column(
             children: [
               if (_showSearchbar) _searchBar(),
               _dailyResultsList(teamsVM.selectedWidget),
@@ -128,9 +129,9 @@ class _TeamsState extends State<Teams> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          DrawerHeader(
+          const DrawerHeader(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Text(
                 'Select Widget',
                 style: TextStyle(
@@ -152,7 +153,7 @@ class _TeamsState extends State<Teams> {
   }
 
   Widget _drawerItem(WidgetName widgetName, TeamsViewModel teamsVM) {
-    WidgetName selectedWidgetName = teamsVM.selectedWidget.name;
+    final WidgetName selectedWidgetName = teamsVM.selectedWidget.name;
     return ListTile(
       title: Container(
         color: selectedWidgetName == widgetName ? Colors.black12 : Colors.transparent,
@@ -160,7 +161,7 @@ class _TeamsState extends State<Teams> {
           padding: const EdgeInsets.all(16.0),
           child: Text(
             widgetName.title,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.w500,
               fontSize: 20.0
@@ -179,40 +180,38 @@ class _TeamsState extends State<Teams> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.search),
-            SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                decoration: InputDecoration(
-                  hintText: "Введите для поиска",
-                  hintStyle: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                  border: InputBorder.none,
+        children: [
+          const Icon(Icons.search),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextFormField(
+              decoration: const InputDecoration(
+                hintText: 'Введите для поиска',
+                hintStyle: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
                 ),
-                onChanged: (text) {
-                  setState(() {
-                    _filteredDailyResults = _dailyResults.results.where((dailyResult) {
-                      String teamTitle = dailyResult.sportEvent.tournament.name.toLowerCase();
-                      return teamTitle.contains(text);
-                    }).toList();
-                  });
-                },
+                border: InputBorder.none,
               ),
+              onChanged: (text) {
+                setState(() {
+                  _filteredDailyResults = _dailyResults.results.where((dailyResult) {
+                    final String teamTitle = dailyResult.sportEvent.tournament.name.toLowerCase();
+                    return teamTitle.contains(text);
+                  }).toList();
+                });
+              },
             ),
-          ]
-        ),
+          ),
+        ]
+      ),
     );
   }
 
   Widget _dailyResultsList(SelectedWidget selectedWidget) {
     return Expanded(
       child: ListView.builder(
-        itemCount: (_filteredDailyResults == null || _filteredDailyResults.length == 0) ? 0 : _filteredDailyResults.length,
+        itemCount: (_filteredDailyResults == null || _filteredDailyResults.isEmpty) ? 0 : _filteredDailyResults.length,
         itemBuilder: (BuildContext context, int index) {
           return _dailyResultItem(selectedWidget, _filteredDailyResults[index], index);
         }
@@ -230,7 +229,7 @@ class _TeamsState extends State<Teams> {
             ListTile(
               title: Text(
                 dailyResult.sportEvent.tournament.name,
-                style: TextStyle(
+                style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w500,
                     fontSize: 22.0
@@ -242,9 +241,7 @@ class _TeamsState extends State<Teams> {
                 });
               },
             ),
-            _showMatchesByCountryIndex == index
-              ? _teams(selectedWidget, dailyResult)
-              : SizedBox.shrink(),
+            if (_showMatchesByCountryIndex == index) _teams(selectedWidget, dailyResult),
           ],
         ),
       ),
@@ -274,7 +271,6 @@ class _TeamsState extends State<Teams> {
                           // fontWeight: winner == 'home' ? FontWeight.w900 : FontWeight.w400
                         ),
                       ),
-                      SizedBox(height: 4.0),
                       Text(
                         teamTwo.name,
                         style: TextStyle(
@@ -285,11 +281,11 @@ class _TeamsState extends State<Teams> {
                     ],
                   ),
                 ),
-                periodScores.isNotEmpty ? Row(
+                if (periodScores.isNotEmpty) Row(
                   children:[
                     for (PeriodScores periodScore in periodScores) _periodScoreItem(periodScore),
                   ],
-                ): SizedBox.shrink(),
+                ),
               ],
             ),
             onTap: () {
@@ -304,7 +300,7 @@ class _TeamsState extends State<Teams> {
   Widget _periodScoreItem(PeriodScores periodScore) {
     return Row(
       children: [
-        SizedBox(width: 6.0),
+        const SizedBox(width: 6.0),
         Column(
           children: [
             Text(
@@ -313,7 +309,7 @@ class _TeamsState extends State<Teams> {
                 color: Colors.grey.shade600,
               ),
             ),
-            SizedBox(height: 4.0),
+            const SizedBox(height: 4.0),
             Text(
               periodScore.awayScore.toString(),
               style: TextStyle(
@@ -340,7 +336,7 @@ class _TeamsState extends State<Teams> {
     final teamOne = dailyResult.sportEvent.competitors[0];
     final teamTwo = dailyResult.sportEvent.competitors[1];
     if (seasonId != null){
-      Navigator.push(
+      Navigator.push<void>(
         context,
         MaterialPageRoute(builder: (context) => AverageGoalsChart(
           seasonId: seasonId,
