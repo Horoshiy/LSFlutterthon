@@ -1,6 +1,6 @@
 class GoalsByInterval {
   GoalsByInterval(this.interval, this.goals);
 
-  final String interval;
+  final int interval;
   final double goals;
  }

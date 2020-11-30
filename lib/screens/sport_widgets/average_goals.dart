@@ -1,154 +1,144 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
-
 import 'package:SportRadar/api/requests.dart';
 import 'package:SportRadar/models/api/team_statistics.dart';
 import 'package:SportRadar/models/models.dart';
 import 'package:SportRadar/widgets/progress_loader.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class AverageGoalsChart extends StatefulWidget {
-  AverageGoalsChart({
-    Key key, @required this.seasonId, this.teamOneId, this.teamTwoId
-  }) : super(key: key);
+  AverageGoalsChart(
+      {Key key,
+      @required this.seasonId,
+      this.teamOneId,
+      this.teamTwoId,
+      this.matchStatus,
+      this.currentMatchTime})
+      : super(key: key);
 
   final String seasonId;
   final String teamOneId;
   final String teamTwoId;
+  final String matchStatus;
+  final String currentMatchTime;
   String title = 'Average goals';
- 
+
   @override
   AverageGoalsChartState createState() => AverageGoalsChartState();
 }
- 
-class AverageGoalsChartState extends State<AverageGoalsChart> {
 
-  final timeintervalsArray = <String>["15'", "30'", "45'", "60'", "75'", "90'"];
+class AverageGoalsChartState extends State<AverageGoalsChart> {
+  final timeIntervalsArray = <int>[15, 30, 45, 60, 75, 90];
 
   Team _teamOne;
   Team _teamTwo;
   Scored _teamOneScoredGoals;
+  Scored _teamOneConcededGoals;
   Scored _teamTwoScoredGoals;
-  List<charts.Series> _seriesList;
+  Scored _teamTwoConcededGoals;
+  List<GoalsByInterval> _goalsByInterval;
+  int _gameMinute;
 
   @override
-  void initState()  {
-    _seasonGoalsRequest(widget.teamOneId)
-    .then((Data teamOneData) {
-      _seasonGoalsRequest(widget.teamTwoId)
-      .then((Data teamTwoData) {
+  void initState() {
+    _seasonGoalsRequest(widget.teamOneId).then((Data teamOneData) {
+      _seasonGoalsRequest(widget.teamTwoId).then((Data teamTwoData) {
         setState(() {
           _teamOne = teamOneData.team;
           _teamTwo = teamTwoData.team;
+          _gameMinute = int.parse(widget.currentMatchTime.split(':')[0]);
           _teamOneScoredGoals = teamOneData.goaltimeStatistics.scored;
+          _teamOneConcededGoals = teamOneData.goaltimeStatistics.conceded;
           _teamTwoScoredGoals = teamTwoData.goaltimeStatistics.scored;
-          _seriesList = teamOneData.team?.name != null && teamTwoData.team?.name != null
-          ? _createAverageGoalsChartData()
-          : null;
+          _teamTwoConcededGoals = teamTwoData.goaltimeStatistics.conceded;
+          _goalsByInterval =
+              teamOneData.team?.name != null && teamTwoData.team?.name != null
+                  ? _createCurrentAverageGoalsData()
+                  : null;
         });
       });
     });
     super.initState();
   }
 
-  Future <Data> _seasonGoalsRequest(String teamId) async {
-    final dynamic result = await Requests().getTeamStatistics(widget.seasonId, teamId);
+  Future<Data> _seasonGoalsRequest(String teamId) async {
+    final dynamic result =
+        await Requests().getTeamStatistics(widget.seasonId, teamId);
     final dynamic data = jsonDecode(result.toString());
     final Data teamData = Data.fromJson(data as Map<String, dynamic>);
-    return teamData;   
+    return teamData;
   }
 
-  List<GoalsByInterval> _goalsByIntervalList(Scored teamGoals, int teamTotal) {
-    int index = 0;
-    final goalsByIntervalList = <GoalsByInterval>[];
-    for(final String timeInterval in timeintervalsArray){
-      goalsByIntervalList.add(GoalsByInterval(timeInterval, teamGoals.period[index].value / teamTotal));
-      index++;
+  int getPeriodIndex() {
+    if (_gameMinute < 15) {
+      return 0;
+    } else if (_gameMinute < 30) {
+      return 1;
+    } else if (_gameMinute <= 45) {
+      return 2;
+    } else if (_gameMinute < 60) {
+      return 3;
+    } else if (_gameMinute < 75) {
+      return 4;
+    } else if (_gameMinute <= 90) {
+      return 5;
+    } else {
+      return 0;
     }
-    return goalsByIntervalList; 
   }
 
-  charts.Series<GoalsByInterval, String> _buildChart(String name, List<GoalsByInterval> goalsByInterval, charts.Color color) {
-    return charts.Series<GoalsByInterval, String>(
-      id: name,
-      domainFn: (GoalsByInterval goalsByInterval, _) => goalsByInterval.interval,
-      measureFn: (GoalsByInterval goalsByInterval, _) => goalsByInterval.goals,
-      data: goalsByInterval,
-      colorFn: (GoalsByInterval goalsByInterval, _) {return color;},
-    );
+  GoalsByInterval _goalsByMinuteList(Scored teamGoals, int teamTotal) {
+    final int index = getPeriodIndex();
+    return GoalsByInterval(
+        timeIntervalsArray[index],
+        double.parse((teamGoals.period[index].value / teamTotal * 100)
+            .toStringAsFixed(2)));
   }
 
-  List<charts.Series<GoalsByInterval, String>> _createAverageGoalsChartData() {
-    final int teamOneTotal = _teamOneScoredGoals.total == 0 ? 1 : _teamOneScoredGoals.total;
-    final int teamTwoTotal = _teamTwoScoredGoals.total == 0 ? 1 : _teamTwoScoredGoals.total;
-    final teamOneGoals = _goalsByIntervalList(_teamOneScoredGoals, teamOneTotal);
-    final teamTwoGoals = _goalsByIntervalList(_teamTwoScoredGoals, teamTwoTotal);
-    final charts.Color orangeColor = charts.MaterialPalette.deepOrange.shadeDefault.lighter;
-    final charts.Color blueColor = charts.MaterialPalette.blue.shadeDefault.lighter;
-    return [
-      _buildChart(_teamOne.name, teamOneGoals, orangeColor),
-      _buildChart(_teamTwo.name, teamTwoGoals, blueColor),
-    ];
+  List<GoalsByInterval> _createCurrentAverageGoalsData() {
+    final int teamOneTotal =
+        _teamOneScoredGoals.total == 0 ? 1 : _teamOneScoredGoals.total;
+    final int teamOneConTotal =
+        _teamOneConcededGoals.total == 0 ? 1 : _teamOneConcededGoals.total;
+    final int teamTwoTotal =
+        _teamTwoScoredGoals.total == 0 ? 1 : _teamTwoScoredGoals.total;
+    final int teamTwoConTotal =
+        _teamTwoConcededGoals.total == 0 ? 1 : _teamTwoConcededGoals.total;
+    final teamOneGoals = _goalsByMinuteList(_teamOneScoredGoals, teamOneTotal);
+    final teamOneConGoals =
+        _goalsByMinuteList(_teamOneConcededGoals, teamOneConTotal);
+    final teamTwoGoals = _goalsByMinuteList(_teamTwoScoredGoals, teamTwoTotal);
+    final teamTwoConGoals =
+        _goalsByMinuteList(_teamTwoConcededGoals, teamTwoConTotal);
+
+    return [teamOneGoals, teamOneConGoals, teamTwoGoals, teamTwoConGoals];
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title.toUpperCase()),
       ),
-      body: Container(
-        padding: const EdgeInsets.all(20.0),
-        child: _seriesList != null ? _ordinalComboChart() : const ProgressLoader(),
-      ),
-    );
-  }
-
-  Widget _ordinalComboChart() {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: charts.OrdinalComboChart(
-        _seriesList,
-        animate: true,
-        primaryMeasureAxis: const charts.NumericAxisSpec(
-          showAxisLine: false,
-          tickProviderSpec: charts.BasicNumericTickProviderSpec(
-            desiredMinTickCount: 4,
-            desiredMaxTickCount: 6,
-            dataIsInWholeNumbers: false,
-          ),
-          renderSpec: charts.GridlineRendererSpec(
-            labelAnchor: charts.TickLabelAnchor.centered,
-            labelJustification: charts.TickLabelJustification.outside,
-          ),
-        ),
-        defaultRenderer: charts.BarRendererConfig(
-          groupingType: charts.BarGroupingType.grouped
-        ),
-        behaviors: [
-          charts.ChartTitle('', // Used  for top padding
-            behaviorPosition: charts.BehaviorPosition.top,
-            titleOutsideJustification: charts.OutsideJustification.start,
-            innerPadding: 100
-          ),
-          charts.ChartTitle('Time interval',
-            behaviorPosition: charts.BehaviorPosition.bottom,
-            titleOutsideJustification:
-                charts.OutsideJustification.middleDrawArea
-          ),
-          charts.SeriesLegend(
-            position: charts.BehaviorPosition.inside,
-            desiredMaxRows: 2,
-            desiredMaxColumns: 1,
-          ),
-        ],
-      ),
+      body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: _goalsByInterval != null
+              ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('$_gameMinute минута', style: const TextStyle(fontWeight: FontWeight.bold),),
+                  Text(
+                      'Статистика по голам с ${_goalsByInterval[0].interval - 15} по ${_goalsByInterval[0].interval} минуту',
+                  style: const TextStyle(fontWeight: FontWeight.w900),),
+                  Text('${_teamOne.name} забито ${_goalsByInterval[0].goals}%'),
+                  Text(
+                      '${_teamOne.name} пропущено ${_goalsByInterval[1].goals}%'),
+                  Text('${_teamTwo.name} забито ${_goalsByInterval[2].goals}%'),
+                  Text(
+                      '${_teamTwo.name} пропущено ${_goalsByInterval[3].goals}%')
+                ])
+              : const ProgressLoader()),
     );
   }
 }
-
-
-

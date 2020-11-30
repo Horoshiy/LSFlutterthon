@@ -103,7 +103,7 @@ class Tournament {
   String id;
   String name;
   Sport sport;
-  Sport category;
+  Category category;
 
   Tournament({this.id, this.name, this.sport, this.category});
 
@@ -122,6 +122,19 @@ class Sport {
   factory Sport.fromJson(Map<String, dynamic> json) => _$SportFromJson(json);
   
   Map<String, dynamic> toJson() => _$SportToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class Category {
+  String id;
+  String name;
+  String countryCode;
+
+  Category({this.id, this.name, this.countryCode});
+
+  factory Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CategoryToJson(this);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -174,6 +187,7 @@ class Venue {
 class SportEventStatus {
   String status;
   String matchStatus;
+  SportEventClock clock;
   int homeScore;
   int awayScore;
   String winnerId;
@@ -204,4 +218,15 @@ class PeriodScores {
   factory PeriodScores.fromJson(Map<String, dynamic> json) => _$PeriodScoresFromJson(json);
   
   Map<String, dynamic> toJson() => _$PeriodScoresToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class SportEventClock {
+  String matchTime;
+
+  SportEventClock({this.matchTime});
+
+  factory SportEventClock.fromJson(Map<String, dynamic> json) => _$SportEventClockFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SportEventClockToJson(this);
 }

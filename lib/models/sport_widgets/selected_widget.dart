@@ -2,23 +2,23 @@ import 'package:meta/meta.dart';
 
 enum WidgetName { 
   averageGoalsWidget,
-  verticalTimelineWidget,
+  liveGameWidget,
 }
 
 extension WidgetNameTitle on WidgetName {
   String get title {
     switch(this) {
       case WidgetName.averageGoalsWidget: return 'Average Goals';
-      case WidgetName.verticalTimelineWidget: return 'Vertical Time';
-      default: return 'Average Goals';
+      case WidgetName.liveGameWidget: return 'Live Game';
+      default: return 'Live Game';
     }
   }
   
   static WidgetName getByName(String title) {
      switch(title) {
        case 'Average Goals': return WidgetName.averageGoalsWidget;
-       case 'Vertical Time': return WidgetName.verticalTimelineWidget;
-       default: return WidgetName.averageGoalsWidget;
+       case 'Vertical Time': return WidgetName.liveGameWidget;
+       default: return WidgetName.liveGameWidget;
     }
   }
 }

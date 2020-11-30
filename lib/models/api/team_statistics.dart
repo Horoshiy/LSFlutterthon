@@ -32,7 +32,7 @@ class Tournament {
   String id;
   String name;
   Sport sport;
-  Sport category;
+  Category category;
   CurrentSeason currentSeason;
 
   Tournament(
